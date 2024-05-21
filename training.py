@@ -13,19 +13,19 @@ import numpy as np
 class ModelTrainer:
     def __init__(self, model_type='xgboost'):
         if model_type == 'xgboost':
-            self.model = XGBRegressor(n_estimators=500, learning_rate=0.1, max_depth=10, subsample=0.8, colsample_bytree=0.8)
-        elif model_type == 'gradient_boosting':
+            self.model = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, subsample=0.8, colsample_bytree=0.8)
+        if model_type == 'gradient_boosting':
             self.model = GradientBoostingRegressor(n_estimators=200, learning_rate=0.15, max_depth=7)
-        elif model_type == 'random_forest':
-            self.model = RandomForestRegressor(n_estimators=150, max_depth=5)
-        elif model_type == 'linear_regression':
+        if model_type == 'random_forest':
+            self.model = RandomForestRegressor(n_estimators=150, max_depth=10)
+        if model_type == 'linear_regression':
             self.model = LinearRegression()
-        elif model_type == 'svr':
+        if model_type == 'svr':
             self.model = SVR(kernel='rbf', C=100, gamma=0.1, epsilon=0.1)
-        elif model_type == 'knn':
+        if model_type == 'knn':
             self.model = KNeighborsRegressor(n_neighbors=8, metric='manhattan')
-        elif model_type == 'decision_tree':
-            self.model = DecisionTreeRegressor(max_depth=10)
+        if model_type == 'decision_tree':
+            self.model = DecisionTreeRegressor(max_depth=12, ccp_alpha=0.25)
         else:
             raise ValueError("El modelo debe ser 'xgboost', 'gradient_boosting', 'random_forest', 'linear_regression', 'svr', 'knn', o 'decision_tree'")
         
@@ -54,9 +54,6 @@ class ModelTrainer:
         mse = mean_squared_error(y_true, y_pred)
         r2 = r2_score(y_true, y_pred)
         mae = mean_absolute_error(y_true, y_pred)
-        print("Error cuadrado medio (MSE):", mse)
-        print("Coeficiente de determinación (R^2):", r2)
-        print("Error absoluto medio (MAE):", mae)
         return mse, r2, mae
 
     def fit_evaluate(self, X, y):
@@ -65,10 +62,12 @@ class ModelTrainer:
         self.train(X_train_scaled, y_train)
         
         print("Evaluación en conjunto de validación:")
-        self.evaluate(X_val_scaled, y_val)
+        val_metrics = self.evaluate(X_val_scaled, y_val)
+        print(f"MSE: {val_metrics[0]}, R2: {val_metrics[1]}, MAE: {val_metrics[2]}")
         
         print("Evaluación en conjunto de prueba:")
-        self.evaluate(X_test_scaled, y_test)
+        test_metrics = self.evaluate(X_test_scaled, y_test)
+        print(f"MSE: {test_metrics[0]}, R2: {test_metrics[1]}, MAE: {test_metrics[2]}")
 
     @staticmethod
     def calculate_aic_bic(X, y, model):
@@ -78,8 +77,7 @@ class ModelTrainer:
         n, k = X.shape[0], X.shape[1]
         resid = y - y_pred
         sse = np.sum(resid ** 2)
-        
         aic = n * np.log(sse / n) + 2 * k
         bic = n * np.log(sse / n) + k * np.log(n)
-        print(aic)
-        print(bic)
+        print(f"AIC: {aic}")
+        print(f"BIC: {bic}")
