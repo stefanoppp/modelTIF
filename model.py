@@ -47,9 +47,8 @@ def main():
 
     years = [datetime.strptime(fecha, '%Y-%m-%d').year for fecha in fechas]
     months = [datetime.strptime(fecha, '%Y-%m-%d').month for fecha in fechas]
-    days = [datetime.strptime(fecha, '%Y-%m-%d').day for fecha in fechas]
 
-    X = np.array(list(zip(years, months, days)))
+    X = np.array(list(zip(years, months)))
     y = np.array(aceitunas)
 
     # Modelo de aceitunas
@@ -67,17 +66,16 @@ def main():
 
     # Solicitar una fecha al usuario y predecir
     while True:
-        user_input = input("Introduce una fecha (YYYY-MM-DD): ")
+        user_input = input("Introduce una fecha (YYYY-MM): ")
         try:
-            user_date = datetime.strptime(user_input, '%Y-%m-%d')
+            user_date = datetime.strptime(user_input, '%Y-%m')
             user_year = user_date.year
             user_month = user_date.month
-            user_day = user_date.day
 
-            user_X = np.array([[user_year, user_month, user_day]])
+            user_X = np.array([[user_year, user_month]])
             user_X_scaled = modelo_aceitunas.scaler.transform(user_X)
             user_prediction = modelo_aceitunas.predict(user_X_scaled)
-            print(f"Predicción para la fecha {user_input}: {user_prediction[0]} toneladas de aceitunas")
+            print(f"Predicción mensual para {user_input}: {user_prediction[0]} toneladas de aceitunas")
         except ValueError:
             print("Fecha no válida. Introduzca la fecha en el formato YYYY-MM-DD.")
     
