@@ -40,6 +40,20 @@ def plot_data(df):
     sns.pairplot(df[['Precio aceite', 'Aceitunas', 'Inflacion']])
     plt.show()
 
+def training(X, variable):
+    modelo = ModelTrainer("decision_tree")
+    modelo.fit_evaluate(X, variable)
+    
+    y_pred = modelo.predict(modelo.scaler.transform(X))
+    print("Predicciones:", y_pred)
+
+    mse, r2, mae = modelo.evaluate(modelo.scaler.transform(X), variable)
+    print("Evaluación en todo el conjunto de datos:")
+    print(f"MSE: {mse}, R2: {r2}, MAE: {mae}")
+    ModelTrainer.calculate_aic_bic(modelo.scaler.transform(X), variable, modelo.model)
+    print("\n")
+    return modelo
+
 def main():
     conn = connect_to_database()
     data = fetch_data_from_db(conn)
@@ -49,33 +63,32 @@ def main():
     months = [datetime.strptime(fecha, '%Y-%m-%d').month for fecha in fechas]
 
     X = np.array(list(zip(years, months)))
-    y = np.array(aceitunas)
+
+    y_aceitunas = np.array(aceitunas)
+    y_inflacion=np.array(inflacion)
+    y_precio=np.array(precios)
+
+    modelos=[]
 
     # Modelo de aceitunas
-    modelo_aceitunas = ModelTrainer("decision_tree")
-    modelo_aceitunas.fit_evaluate(X, y)
-    
-    # Predicciones  del modelo entrenado
-    y_pred = modelo_aceitunas.predict(modelo_aceitunas.scaler.transform(X))
-    print("Predicciones:", y_pred)
+    for variable in y_aceitunas, y_inflacion, y_precio:
+        modelos.append(training(X,variable))
 
-    # Evaluación del modelo en todos los datos 
-    mse, r2, mae = modelo_aceitunas.evaluate(modelo_aceitunas.scaler.transform(X), y)
-    print("Evaluación en todo el conjunto de datos:")
-    print(f"MSE: {mse}, R2: {r2}, MAE: {mae}")
+    print("A")
 
-    # Solicitar una fecha al usuario y predecir
+    #  Solicitar una fecha al usuario y predecir
     while True:
         user_input = input("Introduce una fecha (YYYY-MM): ")
-        try:
-            user_date = datetime.strptime(user_input, '%Y-%m')
-            user_year = user_date.year
-            user_month = user_date.month
+        user_date = datetime.strptime(user_input, '%Y-%m')
+        user_year = user_date.year
+        user_month = user_date.month
+        user_X = np.array([[user_year, user_month]])
 
-            user_X = np.array([[user_year, user_month]])
-            user_X_scaled = modelo_aceitunas.scaler.transform(user_X)
-            user_prediction = modelo_aceitunas.predict(user_X_scaled)
-            print(f"Predicción mensual para {user_input}: {user_prediction[0]} toneladas de aceitunas")
+        try:
+            for modelo in modelos:
+                user_X_scaled = modelo.scaler.transform(user_X)
+                user_prediction = modelo.predict(user_X_scaled)
+                print(f"Primera prediccion para {user_input}: {user_prediction[0]}")
         except ValueError:
             print("Fecha no válida. Introduzca la fecha en el formato YYYY-MM-DD.")
     

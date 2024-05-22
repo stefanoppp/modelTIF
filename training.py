@@ -12,19 +12,19 @@ import numpy as np
 
 class ModelTrainer:
     def __init__(self, model_type='xgboost'):
-        if model_type == 'xgboost':
+        if model_type == "xgboost":
             self.model = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, subsample=0.8, colsample_bytree=0.8)
-        if model_type == 'gradient_boosting':
+        elif model_type == "gradient_boosting":
             self.model = GradientBoostingRegressor(n_estimators=200, learning_rate=0.15, max_depth=7)
-        if model_type == 'random_forest':
+        elif model_type == "random_forest":
             self.model = RandomForestRegressor(n_estimators=150, max_depth=10)
-        if model_type == 'linear_regression':
+        elif model_type == "linear_regression":
             self.model = LinearRegression()
-        if model_type == 'svr':
+        elif model_type == "svr":
             self.model = SVR(kernel='rbf', C=100, gamma=0.1, epsilon=0.1)
-        if model_type == 'knn':
+        elif model_type == "knn":
             self.model = KNeighborsRegressor(n_neighbors=8, metric='manhattan')
-        if model_type == 'decision_tree':
+        elif model_type == "decision_tree":
             self.model = DecisionTreeRegressor(max_depth=12, ccp_alpha=0.25)
         else:
             raise ValueError("El modelo debe ser 'xgboost', 'gradient_boosting', 'random_forest', 'linear_regression', 'svr', 'knn', o 'decision_tree'")
@@ -71,13 +71,28 @@ class ModelTrainer:
 
     @staticmethod
     def calculate_aic_bic(X, y, model):
-        X = sm.add_constant(X)
-        model_with_const = model.fit(X, y)
-        y_pred = model_with_const.predict(X)
-        n, k = X.shape[0], X.shape[1]
-        resid = y - y_pred
-        sse = np.sum(resid ** 2)
-        aic = n * np.log(sse / n) + 2 * k
-        bic = n * np.log(sse / n) + k * np.log(n)
-        print(f"AIC: {aic}")
-        print(f"BIC: {bic}")
+        try:
+            X = sm.add_constant(X)
+            model_with_const = model.fit(X, y)
+            y_pred = model_with_const.predict(X)
+            n, k = X.shape[0], X.shape[1]
+            resid = y - y_pred
+            sse = np.sum(resid ** 2)
+            
+            if sse == 0:
+                raise ZeroDivisionError("SSE es cero, lo que indica un ajuste exacto.")
+            
+            aic = n * np.log(sse / n) + 2 * k
+            bic = n * np.log(sse / n) + k * np.log(n)
+            
+            print(f"AIC: {aic}")
+            print(f"BIC: {bic}")
+            return aic, bic
+
+        except ZeroDivisionError:
+            print("Error: División por cero en el cálculo de AIC/BIC debido a SSE cero.")
+            return float('inf'), float('inf')
+        
+        except Exception as e:
+            print(f"Error en el cálculo de AIC/BIC: {e}")
+            return None, None
