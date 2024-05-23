@@ -43,7 +43,9 @@ def plot_data(df):
 def training(X, variable):
     modelo = ModelTrainer("decision_tree")
     modelo.fit_evaluate(X, variable)
-    
+    return modelo
+
+def predict(X, variable, modelo):
     y_pred = modelo.predict(modelo.scaler.transform(X))
     print("Predicciones:", y_pred)
 
@@ -73,8 +75,6 @@ def main():
     # Modelo de aceitunas
     for variable in y_aceitunas, y_inflacion, y_precio:
         modelos.append(training(X,variable))
-
-    print("A")
 
     #  Solicitar una fecha al usuario y predecir
     while True:
