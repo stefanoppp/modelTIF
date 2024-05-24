@@ -1,6 +1,6 @@
 from xgboost import XGBRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, RidgeCV
 from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.tree import DecisionTreeRegressor
@@ -13,11 +13,11 @@ import numpy as np
 class ModelTrainer:
     def __init__(self, model_type='xgboost'):
         if model_type == "xgboost":
-            self.model = XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, subsample=0.8, colsample_bytree=0.8)
+            self.model = XGBRegressor(n_estimators=150, learning_rate=0.1, max_depth=15, subsample=0.8, colsample_bytree=0.8)
         elif model_type == "gradient_boosting":
-            self.model = GradientBoostingRegressor(n_estimators=200, learning_rate=0.15, max_depth=7)
+            self.model = GradientBoostingRegressor(n_estimators=500, learning_rate=0.15, max_depth=100)
         elif model_type == "random_forest":
-            self.model = RandomForestRegressor(n_estimators=150, max_depth=10)
+            self.model = RandomForestRegressor(n_estimators=140, max_depth=12)
         elif model_type == "linear_regression":
             self.model = LinearRegression()
         elif model_type == "svr":
@@ -25,9 +25,11 @@ class ModelTrainer:
         elif model_type == "knn":
             self.model = KNeighborsRegressor(n_neighbors=8, metric='manhattan')
         elif model_type == "decision_tree":
-            self.model = DecisionTreeRegressor(max_depth=12, ccp_alpha=0.25)
+            self.model = DecisionTreeRegressor(max_depth=100, ccp_alpha=0.25)
+        elif model_type == "advanced_linear":
+            self.model = RidgeCV(alphas=np.logspace(-6, 6, 13), cv=5)
         else:
-            raise ValueError("El modelo debe ser 'xgboost', 'gradient_boosting', 'random_forest', 'linear_regression', 'svr', 'knn', o 'decision_tree'")
+            raise ValueError("El modelo debe ser 'xgboost', 'gradient_boosting', 'random_forest', 'linear_regression', 'svr', 'knn', 'decision_tree' o 'advanced_linear'")
         
         self.scaler = StandardScaler()
 
@@ -68,7 +70,7 @@ class ModelTrainer:
         print("Evaluación en conjunto de prueba:")
         test_metrics = self.evaluate(X_test_scaled, y_test)
         print(f"MSE: {test_metrics[0]}, R2: {test_metrics[1]}, MAE: {test_metrics[2]}")
-
+        print("\n")
     @staticmethod
     def calculate_aic_bic(X, y, model):
         try:
